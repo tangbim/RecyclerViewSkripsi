@@ -54,54 +54,21 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Mulai Catat waktu awal aplikasi
-//        startTime = System.currentTimeMillis()
-        recyclerView = findViewById(R.id.recycler_view)
-        recyclerViewManager = LinearLayoutManager(this)
-        myAdapter = MyAdapter(books)
-        recyclerView.layoutManager = recyclerViewManager
-        recyclerView.adapter = myAdapter
         setContentView(R.layout.activity_main)
 
-//        shimmerView = findViewById(R.id.shimmer_view_container)
-//        shimmerRecyclerView = findViewById(R.id.shimmer_recycler_view)
+        // Inisialisasi RecyclerView
+        val recyclerView: RecyclerView = findViewById(R.id.recycler_view)
 
+        // Atur LayoutManager
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-//        shimmerRecyclerViewManager = LinearLayoutManager(this)
+        // Buat Adapter dengan data
+        val adapter = MyAdapter(books)
 
-//        shimmerAdapter = ShimmerAdapter(books.size)
-
-
-//        shimmerRecyclerView.layoutManager = shimmerRecyclerViewManager
-//        shimmerRecyclerView.adapter = shimmerAdapter
-
-
-//add handler here
-
-
-        // Simulasi loading data
+        // Atur Adapter ke RecyclerView
+        recyclerView.adapter = adapter
 
     }
-
-//    override fun onResume() {
-//        super.onResume()
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            shimmerView.stopShimmer()
-//            shimmerView.visibility = View.GONE
-//            recyclerView.visibility = View.VISIBLE
-//            // Catat waktu selesai
-//            endTime = System.currentTimeMillis()
-//
-//            // Hitung waktu rendering
-//            val renderingTime = endTime - startTime
-//
-//
-//
-//            // Tampilkan waktu rendering di log
-//            println("Rendering time XML: $renderingTime ms")
-//        }, 3000) // set delay
-//
-//    }
 }
 
 
