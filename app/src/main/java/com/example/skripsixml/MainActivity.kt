@@ -42,15 +42,9 @@ class MainActivity : AppCompatActivity() {
         Book(R.drawable.buku20, "Elementary Synchronous Programming", "2019"),
     )
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var shimmerRecyclerView: RecyclerView
-    private lateinit var recyclerViewManager: RecyclerView.LayoutManager
-    private lateinit var shimmerRecyclerViewManager: RecyclerView.LayoutManager
-    private lateinit var myAdapter: RecyclerView.Adapter<*>
-    private lateinit var shimmerAdapter: RecyclerView.Adapter<*>
-    private lateinit var shimmerView: ShimmerFrameLayout
-    private var startTime: Long = 0
-    private var endTime: Long = 0
+
+    //MOVE DATA HERE
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,3 +66,12 @@ class MainActivity : AppCompatActivity() {
 }
 
 
+//    private lateinit var recyclerView: RecyclerView
+//    private lateinit var shimmerRecyclerView: RecyclerView
+//    private lateinit var recyclerViewManager: RecyclerView.LayoutManager
+//    private lateinit var shimmerRecyclerViewManager: RecyclerView.LayoutManager
+//    private lateinit var myAdapter: RecyclerView.Adapter<*>
+//    private lateinit var shimmerAdapter: RecyclerView.Adapter<*>
+//    private lateinit var shimmerView: ShimmerFrameLayout
+//    private var startTime: Long = 0
+//    private var endTime: Long = 0
