@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.shimmer.ShimmerFrameLayout
+import android.view.Choreographer
 
 class MainActivity : AppCompatActivity() {
+
     private val books = listOf(
         Book(R.drawable.buku1, "Python Programming in Context", "2019"),
         Book(R.drawable.buku2, "Core Python Programming", "2001"),
@@ -45,7 +48,6 @@ class MainActivity : AppCompatActivity() {
 
     //MOVE DATA HERE
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -59,10 +61,76 @@ class MainActivity : AppCompatActivity() {
         // Buat Adapter dengan data
         val adapter = MyAdapter(books)
 
+        // Catat waktu sebelum adapter diatur
+        val startTime = SystemClock.elapsedRealtime()
+
         // Atur Adapter ke RecyclerView
         recyclerView.adapter = adapter
 
+        // Mulai FPS monitor
+        fpsMonitor.start()
+
+        // Tambahkan OnGlobalLayoutListener untuk mendapatkan callback setelah layout selesai
+        recyclerView.viewTreeObserver.addOnGlobalLayoutListener {
+            val endTime = SystemClock.elapsedRealtime()
+            val renderingTime = endTime - startTime
+            Log.i("Rendering Time","Render Time : $renderingTime ms")
+        }
+
+
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Hentikan FPS monitor
+        fpsMonitor.stop()
+    }
+
+
+    class FPSMonitor {
+        private var frameCount = 0
+        private var startTime = 0L
+        private val frameCallback = object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                frameCount++
+                val currentTime = SystemClock.elapsedRealtime()
+                val elapsedTime = currentTime - startTime
+                if (elapsedTime >= 1000) {
+                    val fps = frameCount / (elapsedTime / 1000.0)
+                    println("FPS: $fps")
+                    frameCount = 0
+                    startTime = currentTime
+                }
+                Choreographer.getInstance().postFrameCallback(this)
+            }
+        }
+
+        fun start() {
+            startTime = SystemClock.elapsedRealtime()
+            Choreographer.getInstance().postFrameCallback(frameCallback)
+        }
+
+        fun stop() {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        }
+    }
+
+    // Inisialisasi dan mulai FPS monitor di MainActivity
+    val fpsMonitor = FPSMonitor()
+
+
+//    private fun autoScrollRecyclerView(recyclerView: RecyclerView) {
+//        val handler = Handler(Looper.getMainLooper())
+//        val scrollRunnable = object : Runnable {
+//            override fun run() {
+//                recyclerView.smoothScrollBy(0, 50)
+//                if (recyclerView.canScrollVertically(1)) {
+//                    handler.postDelayed(this, 50)
+//                }
+//            }
+//        }
+//        handler.post(scrollRunnable)
+//    }
 }
 
 
