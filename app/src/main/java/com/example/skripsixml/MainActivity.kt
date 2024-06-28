@@ -4,16 +4,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
+import android.view.Choreographer
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.shimmer.ShimmerFrameLayout
-import android.view.Choreographer
 
 class MainActivity : AppCompatActivity() {
-
     private val books = listOf(
         Book(R.drawable.buku1, "Python Programming in Context", "2019"),
         Book(R.drawable.buku2, "Core Python Programming", "2001"),
@@ -45,101 +43,89 @@ class MainActivity : AppCompatActivity() {
         Book(R.drawable.buku20, "Elementary Synchronous Programming", "2019"),
     )
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var shimmerRecyclerView: RecyclerView
+    private lateinit var recyclerViewManager: RecyclerView.LayoutManager
+    private lateinit var shimmerRecyclerViewManager: RecyclerView.LayoutManager
+    private lateinit var myAdapter: RecyclerView.Adapter<*>
+    private lateinit var shimmerAdapter: RecyclerView.Adapter<*>
+    private lateinit var shimmerView: ShimmerFrameLayout
+    private var startTime: Long = 0
+    private var endTime: Long = 0
 
-    //MOVE DATA HERE
+    // Tambahkan FPSMonitor
+    private val fpsMonitor = FPSMonitor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Mulai Catat waktu awal aplikasi
+        startTime = System.currentTimeMillis()
         setContentView(R.layout.activity_main)
 
-        // Inisialisasi RecyclerView
-        val recyclerView: RecyclerView = findViewById(R.id.recycler_view)
+        shimmerView = findViewById(R.id.shimmer_view_container)
+        shimmerRecyclerView = findViewById(R.id.shimmer_recycler_view)
+        recyclerView = findViewById(R.id.recycler_view)
 
-        // Atur LayoutManager
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        shimmerRecyclerViewManager = LinearLayoutManager(this)
+        recyclerViewManager = LinearLayoutManager(this)
+        shimmerAdapter = ShimmerAdapter(books.size)
+        myAdapter = MyAdapter(books)
 
-        // Buat Adapter dengan data
-        val adapter = MyAdapter(books)
+        shimmerRecyclerView.layoutManager = shimmerRecyclerViewManager
+        shimmerRecyclerView.adapter = shimmerAdapter
 
-        // Catat waktu sebelum adapter diatur
-        val startTime = SystemClock.elapsedRealtime()
-
-        // Atur Adapter ke RecyclerView
-        recyclerView.adapter = adapter
-
-        // Mulai FPS monitor
-        fpsMonitor.start()
-
-        // Tambahkan OnGlobalLayoutListener untuk mendapatkan callback setelah layout selesai
-        recyclerView.viewTreeObserver.addOnGlobalLayoutListener {
-            val endTime = SystemClock.elapsedRealtime()
-            val renderingTime = endTime - startTime
-            Log.i("Rendering Time","Render Time : $renderingTime ms")
-        }
-
-
+        recyclerView.layoutManager = recyclerViewManager
+        recyclerView.adapter = myAdapter
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // Hentikan FPS monitor
+    override fun onResume() {
+        super.onResume()
+        fpsMonitor.start()
+        Handler(Looper.getMainLooper()).postDelayed({
+            shimmerView.stopShimmer()
+            shimmerView.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            // Catat waktu selesai
+            endTime = System.currentTimeMillis()
+
+            // Hitung waktu rendering
+            val renderingTime = endTime - startTime
+
+            // Tampilkan waktu rendering di log
+            println("Rendering time XML: $renderingTime ms")
+        }, 5000) // set delay
+    }
+
+    override fun onPause() {
+        super.onPause()
         fpsMonitor.stop()
     }
+}
 
-
-    class FPSMonitor {
-        private var frameCount = 0
-        private var startTime = 0L
-        private val frameCallback = object : Choreographer.FrameCallback {
-            override fun doFrame(frameTimeNanos: Long) {
-                frameCount++
-                val currentTime = SystemClock.elapsedRealtime()
-                val elapsedTime = currentTime - startTime
-                if (elapsedTime >= 1000) {
-                    val fps = frameCount / (elapsedTime / 1000.0)
-                    println("FPS: $fps")
-                    frameCount = 0
-                    startTime = currentTime
-                }
-                Choreographer.getInstance().postFrameCallback(this)
+class FPSMonitor {
+    private var frameCount = 0
+    private var startTime = 0L
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            frameCount++
+            val currentTime = SystemClock.elapsedRealtime()
+            val elapsedTime = currentTime - startTime
+            if (elapsedTime >= 1000) {
+                val fps = frameCount / (elapsedTime / 1000.0)
+                println("FPS: $fps")
+                frameCount = 0
+                startTime = currentTime
             }
-        }
-
-        fun start() {
-            startTime = SystemClock.elapsedRealtime()
-            Choreographer.getInstance().postFrameCallback(frameCallback)
-        }
-
-        fun stop() {
-            Choreographer.getInstance().removeFrameCallback(frameCallback)
+            Choreographer.getInstance().postFrameCallback(this)
         }
     }
 
-    // Inisialisasi dan mulai FPS monitor di MainActivity
-    val fpsMonitor = FPSMonitor()
+    fun start() {
+        startTime = SystemClock.elapsedRealtime()
+        Choreographer.getInstance().postFrameCallback(frameCallback)
+    }
 
-
-//    private fun autoScrollRecyclerView(recyclerView: RecyclerView) {
-//        val handler = Handler(Looper.getMainLooper())
-//        val scrollRunnable = object : Runnable {
-//            override fun run() {
-//                recyclerView.smoothScrollBy(0, 50)
-//                if (recyclerView.canScrollVertically(1)) {
-//                    handler.postDelayed(this, 50)
-//                }
-//            }
-//        }
-//        handler.post(scrollRunnable)
-//    }
+    fun stop() {
+        Choreographer.getInstance().removeFrameCallback(frameCallback)
+    }
 }
-
-
-//    private lateinit var recyclerView: RecyclerView
-//    private lateinit var shimmerRecyclerView: RecyclerView
-//    private lateinit var recyclerViewManager: RecyclerView.LayoutManager
-//    private lateinit var shimmerRecyclerViewManager: RecyclerView.LayoutManager
-//    private lateinit var myAdapter: RecyclerView.Adapter<*>
-//    private lateinit var shimmerAdapter: RecyclerView.Adapter<*>
-//    private lateinit var shimmerView: ShimmerFrameLayout
-//    private var startTime: Long = 0
-//    private var endTime: Long = 0

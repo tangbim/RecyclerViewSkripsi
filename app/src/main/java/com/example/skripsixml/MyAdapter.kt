@@ -34,23 +34,23 @@ class MyAdapter(private val data: List<Book>) : RecyclerView.Adapter<MyAdapter.M
         holder.bind(data[position])
     }
 }
-//class ShimmerAdapter(private val itemCount: Int) : RecyclerView.Adapter<ShimmerAdapter.ShimmerViewHolder>() {
-//
-//    class ShimmerViewHolder(view: View) : RecyclerView.ViewHolder(view)
-//
-//    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShimmerViewHolder {
-//        val view = LayoutInflater.from(parent.context)
-//            .inflate(R.layout.list_item_shimmer, parent, false)
-//        return ShimmerViewHolder(view)
-//    }
-//
-//    override fun getItemCount(): Int {
-//        return itemCount
-//    }
-//
-//    override fun onBindViewHolder(holder: ShimmerViewHolder, position: Int) {
-//        // No binding necessary for shimmer items
-//    }
-//}
+class ShimmerAdapter(private val itemCount: Int) : RecyclerView.Adapter<ShimmerAdapter.ShimmerViewHolder>() {
+
+    class ShimmerViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShimmerViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.list_item_shimmer, parent, false)
+        return ShimmerViewHolder(view)
+    }
+
+    override fun getItemCount(): Int {
+        return itemCount
+    }
+
+    override fun onBindViewHolder(holder: ShimmerViewHolder, position: Int) {
+        // No binding necessary for shimmer items
+    }
+}
 
 
