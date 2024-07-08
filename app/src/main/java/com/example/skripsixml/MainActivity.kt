@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var myAdapter: RecyclerView.Adapter<*>
     private lateinit var shimmerAdapter: RecyclerView.Adapter<*>
     private lateinit var shimmerView: ShimmerFrameLayout
-    private var startTime: Long = 0
+    private var startTimeRender: Long = 0
     private var endTime: Long = 0
 
     // Tambahkan FPSMonitor
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Mulai Catat waktu awal aplikasi
-        startTime = SystemClock.elapsedRealtime()
+        startTimeRender = SystemClock.elapsedRealtime()
         setContentView(R.layout.activity_main)
 
         shimmerView = findViewById(R.id.shimmer_view_container)
@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = recyclerViewManager
         recyclerView.adapter = myAdapter
+
     }
 
     override fun onResume() {
@@ -84,12 +85,13 @@ class MainActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             shimmerView.stopShimmer()
             shimmerView.visibility = View.GONE
-            recyclerView.visibility = View.VISIBLE
             // Catat waktu selesai
+
             endTime = SystemClock.elapsedRealtime()
+            recyclerView.visibility = View.VISIBLE
 
             // Hitung waktu rendering
-            val renderingTime = endTime - startTime
+            val renderingTime = endTime - startTimeRender
 
             // Tampilkan waktu rendering di log
             println("Rendering time XML: $renderingTime ms")
@@ -104,24 +106,24 @@ class MainActivity : AppCompatActivity() {
 
 class FPSMonitor {
     private var frameCount = 0
-    private var startTime = 0L
+    private var startTimeFps = 0L
     private val frameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             frameCount++
             val currentTime = SystemClock.elapsedRealtime()
-            val elapsedTime = currentTime - startTime
+            val elapsedTime = currentTime - startTimeFps
             if (elapsedTime >= 1000) {
                 val fps = frameCount / (elapsedTime / 1000.0)
                 println("FPS: $fps")
                 frameCount = 0
-                startTime = currentTime
+                startTimeFps = currentTime
             }
             Choreographer.getInstance().postFrameCallback(this)
         }
     }
 
     fun start() {
-        startTime = SystemClock.elapsedRealtime()
+        startTimeFps = SystemClock.elapsedRealtime()
         Choreographer.getInstance().postFrameCallback(frameCallback)
     }
 
