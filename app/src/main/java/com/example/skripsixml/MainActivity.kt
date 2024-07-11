@@ -1,47 +1,22 @@
+// MainActivity.kt
 package com.example.skripsixml
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+//import android.os.Handler
+//import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.Choreographer
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.shimmer.ShimmerFrameLayout
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
-    private val books = listOf(
-        Book(R.drawable.buku1, "Python Programming in Context", "2019"),
-        Book(R.drawable.buku2, "Core Python Programming", "2001"),
-        Book(
-            R.drawable.buku3,
-            "The C# Programming Language (Covering C# 4.0), Portable Documents",
-            "2010"
-        ),
-        Book(R.drawable.buku4, "Programming PHP", "2002"),
-        Book(R.drawable.buku5, "Beginner's Step-by-Step Coding Course", "2020"),
-        Book(R.drawable.buku6, "Java Programming for Beginners", "2017"),
-        Book(R.drawable.buku7, "Rust Programming By Example", "2018"),
-        Book(
-            R.drawable.buku8,
-            "An Experiential Introduction to Principles of Programming Languages",
-            "2022"
-        ),
-        Book(R.drawable.buku9, "Learn to Code by Solving Problems", "2021"),
-        Book(R.drawable.buku10, "Understanding Programming Languages", "1996"),
-        Book(R.drawable.buku11, "Planning Extreme Programming", "2001"),
-        Book(R.drawable.buku12, "Masterminds of Programming", "2009"),
-        Book(R.drawable.buku13, "The Science of Programming", "1981"),
-        Book(R.drawable.buku14, "Introduction to Programming Languages", "2013"),
-        Book(R.drawable.buku15, "COMPUTER PROGRAMMING IN C, SECOND EDITION", "2007"),
-        Book(R.drawable.buku16, "A Programming Primer", "2013"),
-        Book(R.drawable.buku17, "How to Design Programs, second edition", "2018"),
-        Book(R.drawable.buku18, "You Can Do It!", "2004"),
-        Book(R.drawable.buku19, "The Ruby Programming Language", "2008"),
-        Book(R.drawable.buku20, "Elementary Synchronous Programming", "2019"),
-    )
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var shimmerRecyclerView: RecyclerView
@@ -52,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shimmerView: ShimmerFrameLayout
     private var startTimeRender: Long = 0
     private var endTime: Long = 0
+
+
 
     // Tambahkan FPSMonitor
     private val fpsMonitor = FPSMonitor()
@@ -68,8 +45,8 @@ class MainActivity : AppCompatActivity() {
 
         shimmerRecyclerViewManager = LinearLayoutManager(this)
         recyclerViewManager = LinearLayoutManager(this)
-        shimmerAdapter = ShimmerAdapter(books.size)
-        myAdapter = MyAdapter(books)
+        shimmerAdapter = ShimmerAdapter(20)
+        myAdapter = MyAdapter(emptyList())
 
         shimmerRecyclerView.layoutManager = shimmerRecyclerViewManager
         shimmerRecyclerView.adapter = shimmerAdapter
@@ -77,57 +54,89 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = recyclerViewManager
         recyclerView.adapter = myAdapter
 
+
     }
 
     override fun onResume() {
         super.onResume()
         fpsMonitor.start()
-        Handler(Looper.getMainLooper()).postDelayed({
-            shimmerView.stopShimmer()
-            shimmerView.visibility = View.GONE
-            // Catat waktu selesai
+        fetchBooks()
 
-            endTime = SystemClock.elapsedRealtime()
-            recyclerView.visibility = View.VISIBLE
 
-            // Hitung waktu rendering
-            val renderingTime = endTime - startTimeRender
-
-            // Tampilkan waktu rendering di log
-            println("Rendering time XML: $renderingTime ms")
-        }, 5000) // set delay
     }
 
     override fun onPause() {
         super.onPause()
         fpsMonitor.stop()
     }
-}
 
-class FPSMonitor {
-    private var frameCount = 0
-    private var startTimeFps = 0L
-    private val frameCallback = object : Choreographer.FrameCallback {
-        override fun doFrame(frameTimeNanos: Long) {
-            frameCount++
-            val currentTime = SystemClock.elapsedRealtime()
-            val elapsedTime = currentTime - startTimeFps
-            if (elapsedTime >= 1000) {
-                val fps = frameCount / (elapsedTime / 1000.0)
-                println("FPS: $fps")
-                frameCount = 0
-                startTimeFps = currentTime
+    private fun fetchBooks() {
+        val apiKey = "AIzaSyAhl2qVvUISf4YCw6p6lX72KtaPgXcGNCM"
+        ApiClient.instance.getBooks("programming", apiKey,20)
+            .enqueue(object : Callback<BookResponse> {
+                override fun onResponse(
+                    call: Call<BookResponse>,
+                    response: Response<BookResponse>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val books = response.body()!!.items.map {
+                            Book(
+                                bookImage = it.volumeInfo.imageLinks?.thumbnail ?: "",
+                                bookTitle = it.volumeInfo.title,
+                                bookYear = it.volumeInfo.publishedDate?: "Unknown"
+                            )
+                        }
+                        // Update adapter dengan data yang baru diambil
+                        myAdapter = MyAdapter(books)
+                        recyclerView.adapter = myAdapter
+
+                        // Hentikan efek shimmer dan tampilkan RecyclerView
+                        shimmerView.stopShimmer()
+                        endTime = SystemClock.elapsedRealtime()
+                        val renderingTime = endTime - startTimeRender
+                        shimmerView.visibility = View.GONE
+                        recyclerView.visibility = View.VISIBLE
+
+                        // Catat waktu selesai dan hitung waktu rendering
+
+                        Log.i("Rendering time","Rendering time XML: $renderingTime ms")
+                    }
+                }
+
+                override fun onFailure(call: Call<BookResponse>, t: Throwable) {
+                    println("Error fetching data: ${t.message}")
+                }
+            })
+    }
+
+
+
+    class FPSMonitor {
+        private var frameCount = 0
+        private var startTimeFps = 0L
+        private val frameCallback = object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                frameCount++
+                val currentTime = SystemClock.elapsedRealtime()
+                val elapsedTime = currentTime - startTimeFps
+                if (elapsedTime >= 1000) {
+                    val fps = frameCount / (elapsedTime / 1000.0)
+                    println("FPS: $fps")
+                    frameCount = 0
+                    startTimeFps = currentTime
+                }
+                Choreographer.getInstance().postFrameCallback(this)
             }
-            Choreographer.getInstance().postFrameCallback(this)
         }
-    }
+        fun start() {
+            startTimeFps = SystemClock.elapsedRealtime()
+            Choreographer.getInstance().postFrameCallback(frameCallback)
+        }
 
-    fun start() {
-        startTimeFps = SystemClock.elapsedRealtime()
-        Choreographer.getInstance().postFrameCallback(frameCallback)
-    }
+        fun stop() {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        }
 
-    fun stop() {
-        Choreographer.getInstance().removeFrameCallback(frameCallback)
+
     }
 }
